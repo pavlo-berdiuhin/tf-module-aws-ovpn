@@ -60,7 +60,5 @@ variable "instance_type" {
 variable "vpn_clients" {
   description = "VPN clients"
   type        = list(string)
-  default = [
-    "devops",
-  ]
+  default     = []
 }

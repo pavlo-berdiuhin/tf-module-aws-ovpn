@@ -52,11 +52,13 @@ resource "aws_instance" "this" {
     volume_size = 20
   }
   user_data = <<EOF
-    #!/bin/bash -xe
+    #!/usr/bin/env bash
+    set -x
     curl -O https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
     chmod +x openvpn-install.sh
     sudo AUTO_INSTALL=y ENDPOINT=vpn.${data.aws_route53_zone.this.name} ./openvpn-install.sh
-  EOF
+    sudo snap install aws-cli --classic
+    EOF
 
   lifecycle {
     ignore_changes = [ami]

@@ -53,7 +53,7 @@
 | <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | Subnet ID | `string` | n/a | yes |
 | <a name="input_team"></a> [team](#input\_team) | Team name | `string` | `"devops"` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID | `string` | n/a | yes |
-| <a name="input_vpn_clients"></a> [vpn\_clients](#input\_vpn\_clients) | VPN clients | `list(string)` | <pre>[<br/>  "devops"<br/>]</pre> | no |
+| <a name="input_vpn_clients"></a> [vpn\_clients](#input\_vpn\_clients) | VPN clients | `list(string)` | `[]` | no |
 | <a name="input_zone_id"></a> [zone\_id](#input\_zone\_id) | Route53 zone ID | `string` | n/a | yes |
 
 ## Outputs
