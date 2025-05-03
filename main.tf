@@ -12,19 +12,22 @@ provider "aws" {
   }
 }
 
+
 data "aws_ami" "this" {
   owners      = ["099720109477"]
   most_recent = true
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-ard64-server-*"]
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-server-*"]
   }
 }
+
 
 data "aws_route53_zone" "this" {
   zone_id = var.zone_id
 }
+
 
 locals {
   name = "${var.deployment_name}-${var.environment}-${var.stack}"
@@ -59,6 +62,7 @@ resource "aws_instance" "this" {
     ignore_changes = [ami]
   }
 }
+
 ####################################################################################################
 # Network
 ####################################################################################################
@@ -70,7 +74,7 @@ resource "aws_security_group" "this" {
   ingress {
     from_port   = 1194
     to_port     = 1194
-    protocol    = "dns"
+    protocol    = "udp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
@@ -86,6 +90,7 @@ resource "aws_eip" "this" {
   domain   = "vpc"
   instance = aws_instance.this.id
 }
+
 
 resource "aws_route53_record" "vpn" {
   zone_id = var.zone_id
@@ -111,4 +116,13 @@ module "iam" {
   custom_role_policy_arns = [
     "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
   ]
+  inline_policy_statements = {
+    "AllowSSM" = {
+      Effect = "Allow"
+      Action = [
+        "ssm:PutParameter",
+      ]
+      Resource = "/${local.name}/*"
+    }
+  }
 }

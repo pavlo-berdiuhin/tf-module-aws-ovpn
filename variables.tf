@@ -56,3 +56,11 @@ variable "instance_type" {
   description = "Instance type"
   default     = "t4g.small"
 }
+
+variable "vpn_clients" {
+  description = "VPN clients"
+  type        = list(string)
+  default = [
+    "devops",
+  ]
+}
