@@ -13,6 +13,9 @@ provider "aws" {
 }
 
 
+data "aws_caller_identity" "this" {}
+
+
 data "aws_ami" "this" {
   owners      = ["099720109477"]
   most_recent = true
@@ -51,7 +54,7 @@ resource "aws_instance" "this" {
     volume_type = "gp3"
     volume_size = 20
   }
-  user_data = <<EOF
+  user_data = <<-EOF
     #!/usr/bin/env bash
     set -x
     curl -O https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
@@ -120,11 +123,13 @@ module "iam" {
   ]
   inline_policy_statements = {
     "AllowSSM" = {
-      Effect = "Allow"
-      Action = [
+      effect = "Allow"
+      actions = [
         "ssm:PutParameter",
       ]
-      Resource = "/${local.name}/*"
+      resources = [
+        "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.this.account_id}:parameter/${local.name}/*",
+      ]
     }
   }
 }
