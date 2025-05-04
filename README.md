@@ -1,5 +1,8 @@
 # tf-module-aws-ovpn
 
+## Requirements at local machine:
+- netcat(nc) for health check
+
 ## Inspired by:
 - https://github.com/angristan/openvpn-install
 - https://github.com/dumrauf/openvpn-terraform-install/tree/master
