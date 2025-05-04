@@ -21,6 +21,24 @@ resource "aws_ssm_parameter" "this" {
 ################################################################################
 # VPN Clients Provisioning
 ################################################################################
+resource "null_resource" "vpn_alive" {
+  provisioner "local-exec" {
+    command = <<EOT
+      for i in {1..60}; do
+        nc -z -w1 ${aws_instance.this.public_ip} 1194 && echo "Server is up" && exit 0
+        echo "Waiting for server to be alive..."
+        sleep 5
+      done
+      echo "Server did not become available in time" >&2
+      exit 1
+    EOT
+  }
+
+  triggers = {
+    instance_id = aws_instance.this.id
+  }
+}
+
 resource "aws_ssm_document" "this" {
   for_each = toset(var.vpn_clients)
 
@@ -41,7 +59,7 @@ resource "aws_ssm_document" "this" {
       }
     }]
   })
-  depends_on = [aws_instance.this]
+  depends_on = [aws_instance.this, null_resource.vpn_alive]
 }
 
 
