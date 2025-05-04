@@ -23,7 +23,8 @@ resource "aws_ssm_parameter" "this" {
 ################################################################################
 resource "null_resource" "vpn_alive" {
   provisioner "local-exec" {
-    command = <<EOT
+    command = <<-EOT
+      bash -c '
       for i in {1..60}; do
         echo > /dev/udp/${aws_instance.this.public_ip}/1194 && echo "Server is up" && exit 0
         echo "Waiting for server to be alive..."
@@ -31,6 +32,7 @@ resource "null_resource" "vpn_alive" {
       done
       echo "Server did not become available in time" >&2
       exit 1
+      '
     EOT
   }
 
