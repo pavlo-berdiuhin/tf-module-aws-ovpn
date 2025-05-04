@@ -62,5 +62,7 @@
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_vpn_clients"></a> [vpn\_clients](#output\_vpn\_clients) | n/a |
 <!-- END_TF_DOCS -->
