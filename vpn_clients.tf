@@ -31,7 +31,7 @@ resource "time_sleep" "wait_5min" {
 resource "aws_ssm_document" "this" {
   for_each = toset(var.vpn_clients)
 
-  name          = "AddVpnClient_${each.key}"
+  name          = "${local.name}_${each.key}"
   document_type = "Command"
 
   content = jsonencode({
