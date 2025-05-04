@@ -67,6 +67,7 @@ resource "aws_instance" "this" {
     chmod +x openvpn-install.sh
     sudo AUTO_INSTALL=y ENDPOINT=vpn.${data.aws_route53_zone.this.name} ./openvpn-install.sh
     sed  -i 's/"redirect-gateway def1 bypass-dhcp"/"route ${local.vpc_cidr_host} ${local.vpc_cidr_mask}"/' /etc/openvpn/server.conf
+    systemctl daemon-reload
     systemctl restart openvpn@server.service
     sudo snap install aws-cli --classic
     EOF
