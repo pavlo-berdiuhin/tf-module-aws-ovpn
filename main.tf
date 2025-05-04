@@ -15,6 +15,10 @@ provider "aws" {
 
 data "aws_caller_identity" "this" {}
 
+data "aws_vpc" "this" {
+  id = var.vpc_id
+}
+
 
 data "aws_ami" "this" {
   owners      = ["099720109477"]
@@ -33,7 +37,9 @@ data "aws_route53_zone" "this" {
 
 
 locals {
-  name = "${var.deployment_name}-${var.environment}-${var.stack}"
+  name          = "${var.deployment_name}-${var.environment}-${var.stack}"
+  vpc_cidr_host = cidrhost(data.aws_vpc.this.cidr_block, 0)
+  vpc_cidr_mask = cidrnetmask(data.aws_vpc.this.cidr_block)
 }
 
 ####################################################################################################
@@ -61,6 +67,9 @@ resource "aws_instance" "this" {
     chmod +x openvpn-install.sh
     sudo AUTO_INSTALL=y ENDPOINT=vpn.${data.aws_route53_zone.this.name} ./openvpn-install.sh
     sudo snap install aws-cli --classic
+    sed  's/push "redirect-gateway def1 bypass-dhcp"/#push "redirect-gateway def1 bypass-dhcp"/' /etc/openvpn/server.conf
+    echo 'push "route ${local.vpc_cidr_host} ${local.vpc_cidr_mask}"' >> /etc/openvpn/server.conf
+    systemctl restart openvpn*
     EOF
 
   lifecycle {
