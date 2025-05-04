@@ -21,29 +21,8 @@ resource "aws_ssm_parameter" "this" {
 ################################################################################
 # VPN Clients Provisioning
 ################################################################################
-resource "null_resource" "vpn_alive" {
-  provisioner "local-exec" {
-    command = <<-EOT
-      WAIT=10
-
-      for i in {1..30}; do
-        start_time=$(date +%s)
-        nc -uv -w$WAIT 18.217.56.237 1194 >/dev/null 2>&1
-        exec_time=$(( $(date +%s) - $start_time ))
-
-        if [ $exec_time -lt $WAIT ]; then
-          echo "Waiting for server to be alive..."
-        else
-          echo "Server is up" && exit 0
-        fi
-
-        sleep $WAIT
-      done
-      echo "Server did not become available in time"
-      exit 1
-    EOT
-  }
-
+resource "time_sleep" "wait_5min" {
+  create_duration = "5m"
   triggers = {
     instance_id = aws_instance.this.id
   }
@@ -69,7 +48,7 @@ resource "aws_ssm_document" "this" {
       }
     }]
   })
-  depends_on = [aws_instance.this, null_resource.vpn_alive]
+  depends_on = [aws_instance.this, time_sleep.wait_5min]
 }
 
 
