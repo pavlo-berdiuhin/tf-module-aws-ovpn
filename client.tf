@@ -25,7 +25,7 @@ resource "null_resource" "vpn_alive" {
   provisioner "local-exec" {
     command = <<EOT
       for i in {1..60}; do
-        nc -z -w1 ${aws_instance.this.public_ip} 1194 && echo "Server is up" && exit 0
+        echo > /dev/udp/${aws_instance.this.public_ip}/1194 && && echo "Server is up" && exit 0
         echo "Waiting for server to be alive..."
         sleep 5
       done
