@@ -64,5 +64,6 @@
 
 | Name | Description |
 |------|-------------|
+| <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | n/a |
 | <a name="output_vpn_clients"></a> [vpn\_clients](#output\_vpn\_clients) | n/a |
 <!-- END_TF_DOCS -->
