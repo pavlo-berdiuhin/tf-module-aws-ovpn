@@ -12,7 +12,7 @@ resource "random_password" "this" {
 resource "aws_ssm_parameter" "this" {
   for_each = toset(var.vpn_clients)
 
-  name       = "/${local.name}/${each.key}/ovpn_password"
+  name       = "/${var.name}/${each.key}/ovpn_password"
   type       = "SecureString"
   value      = random_password.this[each.key].result
   depends_on = [random_password.this]
@@ -31,7 +31,7 @@ resource "time_sleep" "wait_5min" {
 resource "aws_ssm_document" "this" {
   for_each = toset(var.vpn_clients)
 
-  name          = "${local.name}_${each.key}"
+  name          = "${var.name}_${each.key}"
   document_type = "Command"
 
   content = jsonencode({
@@ -43,7 +43,7 @@ resource "aws_ssm_document" "this" {
       inputs = {
         runCommand = [
           "MENU_OPTION=1 CLIENT=${each.key} PASS=2 EASYRSA_PASSOUT='pass:${random_password.this[each.key].result}' /openvpn-install.sh",
-          "aws ssm put-parameter --name '/${local.name}/${each.key}/ovpn_config' --type 'String' --value 'file:///root/${each.key}.ovpn' --overwrite",
+          "aws ssm put-parameter --name '/${var.name}/${each.key}/ovpn_config' --type 'String' --value 'file:///root/${each.key}.ovpn' --overwrite",
         ]
       }
     }]

@@ -1,14 +1,7 @@
 provider "aws" {
   region = var.aws_region
   default_tags {
-    tags = merge({
-      Name        = local.name
-      terraform   = "true"
-      owner       = var.owner
-      environment = var.environment
-      stack       = var.stack
-      team        = var.team
-    }, var.additional_tags)
+    tags = var.tags
   }
 }
 
@@ -32,14 +25,18 @@ data "aws_ami" "this" {
 
 
 data "aws_route53_zone" "this" {
+  count = var.zone_id != null ? 1 : 0
+
   zone_id = var.zone_id
 }
 
 
 locals {
-  name          = "${var.deployment_name}-${var.environment}-${var.stack}"
-  vpc_cidr_host = cidrhost(data.aws_vpc.this.cidr_block, 0)
-  vpc_cidr_mask = cidrnetmask(data.aws_vpc.this.cidr_block)
+  create_dns_record = var.zone_id != null
+  dns_name          = local.create_dns_record ? "vpn.${data.aws_route53_zone.this[0].name}" : null
+  vpn_endpoint      = local.create_dns_record ? local.dns_name : aws_eip.this.public_ip
+  vpc_cidr_host     = cidrhost(data.aws_vpc.this.cidr_block, 0)
+  vpc_cidr_mask     = cidrnetmask(data.aws_vpc.this.cidr_block)
 }
 
 ####################################################################################################
@@ -65,7 +62,7 @@ resource "aws_instance" "this" {
     set -x
     curl -O https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
     chmod +x openvpn-install.sh
-    sudo AUTO_INSTALL=y ENDPOINT=vpn.${data.aws_route53_zone.this.name} ./openvpn-install.sh
+    sudo AUTO_INSTALL=y ENDPOINT=${local.vpn_endpoint} ./openvpn-install.sh
     sed  -i 's/"redirect-gateway def1 bypass-dhcp"/"route ${local.vpc_cidr_host} ${local.vpc_cidr_mask}"/' /etc/openvpn/server.conf
     systemctl daemon-reload
     systemctl restart openvpn@server.service
@@ -81,8 +78,8 @@ resource "aws_instance" "this" {
 # Network
 ####################################################################################################
 resource "aws_security_group" "this" {
-  name        = local.name
-  description = "Allow VPN access to the ${local.name} instance"
+  name        = var.name
+  description = "Allow VPN access to the ${var.name} instance"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -101,14 +98,21 @@ resource "aws_security_group" "this" {
 
 
 resource "aws_eip" "this" {
-  domain   = "vpc"
-  instance = aws_instance.this.id
+  domain = "vpc"
+}
+
+
+resource "aws_eip_association" "this" {
+  allocation_id = aws_eip.this.id
+  instance_id   = aws_instance.this.id
 }
 
 
 resource "aws_route53_record" "vpn" {
+  count = local.create_dns_record ? 1 : 0
+
   zone_id = var.zone_id
-  name    = "vpn.${data.aws_route53_zone.this.name}"
+  name    = local.dns_name
   type    = "A"
   ttl     = "300"
   records = [aws_eip.this.public_ip]
@@ -122,7 +126,7 @@ module "iam" {
   version = "5.55.0"
 
   create_role             = true
-  role_name               = local.name
+  role_name               = var.name
   role_requires_mfa       = false
   create_instance_profile = true
   trusted_role_arns       = []
@@ -137,7 +141,7 @@ module "iam" {
         "ssm:PutParameter",
       ]
       resources = [
-        "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.this.account_id}:parameter/${local.name}/*",
+        "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.this.account_id}:parameter/${var.name}/*",
       ]
     }
   }

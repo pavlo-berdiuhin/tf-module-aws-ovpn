@@ -3,36 +3,14 @@ variable "aws_region" {
   description = "AWS region"
 }
 
-variable "environment" {
+variable "name" {
   type        = string
-  description = "Environment"
+  description = "Name used for resource naming"
 }
 
-variable "stack" {
-  type        = string
-  description = "Installation stack"
-}
-
-variable "owner" {
-  type        = string
-  description = "Owner"
-}
-
-variable "team" {
-  type        = string
-  description = "Team name"
-  default     = "devops"
-}
-
-variable "deployment_name" {
-  type        = string
-  description = "Deployment name"
-  default     = "vpn"
-}
-
-variable "additional_tags" {
+variable "tags" {
   type        = map(string)
-  description = "Additional tags for all resources"
+  description = "Tags for all resources"
   default     = {}
 }
 
@@ -49,6 +27,7 @@ variable "subnet_id" {
 variable "zone_id" {
   type        = string
   description = "Route53 zone ID"
+  default     = null
 }
 
 variable "instance_type" {
