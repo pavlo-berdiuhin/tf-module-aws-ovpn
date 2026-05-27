@@ -52,17 +52,21 @@ resource "aws_instance" "this" {
   user_data = <<-EOF
     #!/usr/bin/env bash
     set -x
-    curl -O https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
-    chmod +x openvpn-install.sh
-    sudo AUTO_INSTALL=y ENDPOINT=${local.vpn_endpoint} ./openvpn-install.sh
-    sed  -i 's/"redirect-gateway def1 bypass-dhcp"/"route ${local.vpc_cidr_host} ${local.vpc_cidr_mask}"/' /etc/openvpn/server.conf
+    curl -fsSL -o /openvpn-install.sh https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
+    chmod +x /openvpn-install.sh
+    sudo /openvpn-install.sh install --endpoint ${local.vpn_endpoint} --no-client
+    sed  -i 's/"redirect-gateway def1 bypass-dhcp"/"route ${local.vpc_cidr_host} ${local.vpc_cidr_mask}"/' /etc/openvpn/server/server.conf
     systemctl daemon-reload
-    systemctl restart openvpn@server.service
+    systemctl restart openvpn-server@server
     sudo snap install aws-cli --classic
     EOF
 
   lifecycle {
     ignore_changes = [ami]
+  }
+
+  tags = {
+    Name = var.name
   }
 }
 

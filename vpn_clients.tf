@@ -42,7 +42,7 @@ resource "aws_ssm_document" "this" {
       name   = "vpn_client"
       inputs = {
         runCommand = [
-          "MENU_OPTION=1 CLIENT=${each.key} PASS=2 EASYRSA_PASSOUT='pass:${random_password.this[each.key].result}' /openvpn-install.sh",
+          "/openvpn-install.sh client add '${each.key}' --password '${random_password.this[each.key].result}' --output '/root/${each.key}.ovpn'",
           "aws ssm put-parameter --name '/${var.name}/${each.key}/ovpn_config' --type 'String' --value 'file:///root/${each.key}.ovpn' --overwrite",
         ]
       }
